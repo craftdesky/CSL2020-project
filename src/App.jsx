@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Graph } from "./utils/Graph";
 import AddAirport from "./components/AddAirport";
+import AddRoute from "./components/AddRoute";
 import GraphList from "./components/GraphList";
 
 const App = () => {
@@ -10,9 +11,15 @@ const App = () => {
     setGraph(Object.assign(Object.create(Object.getPrototypeOf(g)), g));
   };
 
-  const handleAdd = (code) => {
+  const handleAddAirport = (code) => {
     const newGraph = Object.assign(Object.create(Object.getPrototypeOf(graph)), graph);
     newGraph.addAirport(code);
+    updateGraph(newGraph);
+  };
+
+  const handleAddRoute = (src, dest, distance, cost) => {
+    const newGraph = Object.assign(Object.create(Object.getPrototypeOf(graph)), graph);
+    newGraph.addRoute(src, dest, distance, cost);
     updateGraph(newGraph);
   };
 
@@ -22,10 +29,13 @@ const App = () => {
     console.groupEnd();
   }, [graph]);
 
+  const airports = graph.getAirports();
+
   return (
     <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Component Test: AddAirport</h1>
-      <AddAirport onAdd={handleAdd} />
+      <h1>Airport Route Planner</h1>
+      <AddAirport onAdd={handleAddAirport} />
+      <AddRoute airports={airports} onAdd={handleAddRoute} />
       <GraphList graph={graph} />
     </div>
   );

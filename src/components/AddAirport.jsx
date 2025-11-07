@@ -2,12 +2,27 @@ import React, { useState } from "react";
 
 const AddAirport = ({ onAdd }) => {
   const [code, setCode] = useState("");
+  const [message, setMessage] = useState("");
 
   const handleAdd = () => {
     const trimmed = code.trim().toUpperCase();
-    if (!trimmed) return;
+
+    if (!trimmed) {
+      setMessage("Please enter a valid airport code.");
+      return;
+    }
+
+    if (trimmed.length !== 3) {
+      setMessage("Airport codes should have exactly 3 letters (e.g., DEL).");
+      return;
+    }
+
     onAdd(trimmed);
+    setMessage(`Airport added: ${trimmed}`);
     setCode("");
+
+    // optional: clear message after a few seconds
+    setTimeout(() => setMessage(""), 3000);
   };
 
   return (
@@ -27,6 +42,18 @@ const AddAirport = ({ onAdd }) => {
           Add
         </button>
       </div>
+
+      {message && (
+        <p
+          className={`text-sm mt-1 ${
+            message.startsWith("Airport added")
+              ? "text-green-600"
+              : "text-red-600"
+          }`}
+        >
+          {message}
+        </p>
+      )}
     </div>
   );
 };

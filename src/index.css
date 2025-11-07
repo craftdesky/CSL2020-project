@@ -2,13 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Optional — custom global styling */
+/* Global fallback styles */
 html, body, #root {
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #0f0f0f; /* fallback dark background */
+  background-color: #0f0f0f;
   color: white;
   font-family: sans-serif;
+}
+
+/* ✨ Input field styling */
+input, select {
+  background-color: #1e293b;   /* slate-800 */
+  color: #f8fafc;              /* white-ish text */
+  border: 1px solid #334155;   /* subtle gray border */
+  border-radius: 0.375rem;     /* rounded-md */
+  padding: 0.5rem;
+}
+
+input::placeholder, select::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+
+/* Change border on focus */
+input:focus, select:focus {
+  outline: none;
+  border-color: #3b82f6; /* blue-500 */
+  box-shadow: 0 0 0 1px #3b82f6;
+  background-color: #0f172a; /* darker bg on focus */
 }

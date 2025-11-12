@@ -1,6 +1,3 @@
-// src/algorithms/fewestStops.js
-
-// Breadth-First Search for minimum number of edges ("fewest stops").
 export function fewestStops(graph, src, dest) {
   if (!graph || !graph.adjList) throw new Error("Invalid graph");
   if (!graph.adjList.has(src) || !graph.adjList.has(dest)) {

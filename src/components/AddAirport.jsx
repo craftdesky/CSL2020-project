@@ -21,7 +21,6 @@ const AddAirport = ({ onAdd }) => {
     setMessage(`Airport added: ${trimmed}`);
     setCode("");
 
-    // optional: clear message after a few seconds
     setTimeout(() => setMessage(""), 3000);
   };
 

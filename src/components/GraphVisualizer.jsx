@@ -8,13 +8,12 @@ const GraphVisualizer = ({
   visitedStep = 0,
   pathStep = 0
 }) => {
-  // Slices: animate exploration and then path steps
   const currentVisited = visitedNodes.slice(0, visitedStep);
   const currentPath = pathEdges.slice(0, pathStep);
   const isPathEdge = (start, end) => currentPath.some(([s, e]) => (s === start && e === end) || (s === end && e === start));
   return (
     <svg width={600} height={400} style={{ border: "1px solid #222", background: "#101722" }}>
-      {/* Edges */}
+      {}
       {edges.map(([start, end], idx) => (
         <line
           key={idx}
@@ -26,7 +25,7 @@ const GraphVisualizer = ({
           strokeWidth={isPathEdge(start, end) ? 4 : 2}
         />
       ))}
-      {/* Nodes */}
+      {}
       {Object.entries(nodes).map(([id, { x, y }]) => {
         const visited = currentVisited.includes(id);
         const onFinalPath = currentPath.flat().includes(id);

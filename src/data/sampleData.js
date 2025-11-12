@@ -1,15 +1,11 @@
-// src/data/sampleData.js
-
 export const sampleAirports = [
-  "DEL", "BOM", "BLR", "HYD", "MAA", "CCU", // Major hubs
+  "DEL", "BOM", "BLR", "HYD", "MAA", "CCU",
   "PNQ", "GOI", "AMD", "LKO",
   "COK", "JAI", "PAT", "TRV",
-  "IXE", "IXC" // Smaller/low-degree nodes
+  "IXE", "IXC"
 ];
 
-// Routes (realistic for India metro + regional)
 export const sampleRoutes = [
-  // Major metro-to-metro
   { src: "DEL", dest: "BOM", distance: 1150, cost: 4800 },
   { src: "DEL", dest: "BLR", distance: 1750, cost: 6800 },
   { src: "DEL", dest: "HYD", distance: 1250, cost: 5600 },
@@ -30,7 +26,6 @@ export const sampleRoutes = [
 
   { src: "MAA", dest: "CCU", distance: 1360, cost: 5800 },
 
-  // Tier 2 cities with connections to multiple hubs
   { src: "PNQ", dest: "BOM", distance: 120, cost: 900 },
   { src: "PNQ", dest: "BLR", distance: 730, cost: 3100 },
   { src: "PNQ", dest: "DEL", distance: 1450, cost: 5400 },
@@ -54,7 +49,6 @@ export const sampleRoutes = [
   { src: "JAI", dest: "DEL", distance: 280, cost: 1600 },
   { src: "JAI", dest: "BOM", distance: 910, cost: 3900 },
 
-  // Regional nodes with few edges
   { src: "PAT", dest: "DEL", distance: 1000, cost: 4800 },
   { src: "PAT", dest: "CCU", distance: 470, cost: 1900 },
 

@@ -18,7 +18,6 @@ class MinHeap {
   _left(i) { return i * 2 + 1; }
   _right(i) { return i * 2 + 2; }
 
-  // renamed from _siftUp
   bubbleUp(i) {
     while (i > 0) {
       const p = this._parent(i);
@@ -28,7 +27,6 @@ class MinHeap {
     }
   }
 
-  // renamed from _siftDown
   bubbleDown(i) {
     while (true) {
       const l = this._left(i), r = this._right(i);
@@ -45,7 +43,6 @@ class MinHeap {
   size() { return this.heap.length; }
 }
 
-// dijkstra(graph, src, dest, metric) => { path, total, visited, distMap }
 export function dijkstra(graph, src, dest, metric = "distance") {
   if (!graph || !graph.adjList) throw new Error("Invalid graph");
   if (!graph.adjList.has(src) || !graph.adjList.has(dest)) {

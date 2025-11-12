@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 
 function interleaveIndices(n) {
-  // Returns the order of indices for "even" scattering
   if (n === 0) return [];
   const res = [];
   let queue = [[0, n - 1]];
@@ -67,7 +66,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
 
     if (!graph || !(graph.adjList instanceof Map) || graph.adjList.size === 0) return;
 
-    // Calculate node degrees
     const degrees = {};
     let maxDegree = 0;
     for (let [airport, edges] of graph.adjList.entries()) {
@@ -75,11 +73,9 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       if (edges.length > maxDegree) maxDegree = edges.length;
     }
 
-    // Interleave highest degree nodes at max separation
     const sortedAirports = Array.from(graph.adjList.keys()).sort((a, b) => degrees[b] - degrees[a]);
     const n = sortedAirports.length;
 
-    // Get placement indices interleaved for maximal separation:
     const indices = interleaveIndices(n);
     const airports = Array(n);
     indices.forEach((idx, k) => {
@@ -100,7 +96,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     const minR = 14;
     const maxR = 34;
 
-    // Draw edges
     for (let [airport, edges] of graph.adjList.entries()) {
       const srcPos = positions[airport];
       for (const edge of edges) {
@@ -117,7 +112,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       }
     }
 
-    // Draw nodes
     for (let [airport, pos] of Object.entries(positions)) {
       const degree = degrees[airport] || 0;
       const cappedDegree = Math.min(degree, 10);

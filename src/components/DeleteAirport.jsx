@@ -1,4 +1,3 @@
-// src/components/DeleteAirport.jsx
 import React, { useState } from "react";
 
 const DeleteAirport = ({ airports, onDelete }) => {

@@ -61,12 +61,10 @@ class MinHeap {
   }
 }
 
-// Default heuristic function returning 0 (equivalent to Dijkstra)
 function defaultHeuristic(a, b) {
   return 0;
 }
 
-// astar function exports the pathfinding algorithm
 export function astar(graph, src, dest, metric = "distance", heuristic = defaultHeuristic) {
   if (!graph || !graph.adjList) throw new Error("Invalid graph");
   if (!graph.adjList.has(src) || !graph.adjList.has(dest)) {

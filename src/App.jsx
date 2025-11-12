@@ -11,7 +11,6 @@ import DeleteAirport from "./components/DeleteAirport";
 import DeleteRoute from "./components/DeleteRoute";
 import GraphAnalysisDashboard from "./components/GraphAnalysisDashboard";
 
-// All initial state from data, no localStorage
 const initialGraph = Graph.fromData(sampleAirports, sampleRoutes);
 
 const App = () => {
@@ -19,12 +18,10 @@ const App = () => {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [highlightedEdges, setHighlightedEdges] = useState([]);
 
-  // Helper to force React to see new Graph object on changes
   const cloneGraph = (g) => Object.assign(Object.create(Object.getPrototypeOf(g)), g);
 
   const airports = graph.getAirports();
 
-  // --- Path result handler ---
   const handlePathResult = ({ path, total, highlightedEdges: edges, metric }) => {
     if (!path) {
       setMessage({ text: "No path found", type: "error" });
@@ -42,7 +39,6 @@ const App = () => {
     setHighlightedEdges(edges || []);
   };
 
-  // --- Graph modification (for add <-> remove) ---
   const updateGraph = (g) => setGraph(cloneGraph(g));
 
   const handleAddAirport = (code) => {
@@ -109,7 +105,6 @@ const App = () => {
           </div>
         </aside>
 
-        {/* Main canvas area */}
         <main className="flex-1 flex items-center justify-center bg-gray-950 p-6">
           <div className="w-full h-full max-w-6xl max-h-[80vh]">
             <Canvas graph={graph} highlightedEdges={highlightedEdges} />

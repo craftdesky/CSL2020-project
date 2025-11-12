@@ -1,8 +1,5 @@
-// src/components/GraphAnalysisDashboard.jsx
-
 import React from "react";
 
-// Most connected airport (degree centrality)
 function getDegreeCentrality(graph) {
   const degrees = {};
   for (let [airport, edges] of graph.adjList.entries()) {
@@ -15,7 +12,6 @@ function getDegreeCentrality(graph) {
   return { degrees, mostConnected, maxDegree };
 }
 
-// Connected subnetworks
 function getConnectedComponents(graph) {
   const visited = new Set();
   const components = [];
@@ -40,7 +36,6 @@ function getConnectedComponents(graph) {
   return components;
 }
 
-// Naive betweenness centrality
 function getBetweennessCentrality(graph) {
   const airports = Array.from(graph.adjList.keys());
   const betweenness = {};

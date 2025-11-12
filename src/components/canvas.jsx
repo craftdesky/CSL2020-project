@@ -1,12 +1,28 @@
-// src/components/Canvas.jsx
 import React, { useEffect, useRef, useState } from "react";
+
+function interleaveIndices(n) {
+  // Returns the order of indices for "even" scattering
+  if (n === 0) return [];
+  const res = [];
+  let queue = [[0, n - 1]];
+  while (queue.length) {
+    let [l, r] = queue.shift();
+    if (l > r) continue;
+    const mid = Math.floor((l + r) / 2);
+    res.push(mid);
+    if (l !== r) {
+      queue.push([l, mid - 1]);
+      queue.push([mid + 1, r]);
+    }
+  }
+  return res;
+}
 
 const Canvas = ({ graph, highlightedEdges = [] }) => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
   const [size, setSize] = useState({ w: 600, h: 400 });
 
-  // Resize observer to adapt to container
   useEffect(() => {
     const ro = new ResizeObserver(() => {
       if (!containerRef.current) return;
@@ -23,7 +39,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     return () => { ro.disconnect(); window.removeEventListener("resize", onResize); };
   }, []);
 
-  // Track highlighted edges
   const highlightSet = useRef(new Set());
   useEffect(() => {
     const s = new Set();
@@ -38,7 +53,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.floor(size.w * dpr);
     canvas.height = Math.floor(size.h * dpr);
@@ -47,19 +61,33 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    // Clear & background
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.fillStyle = "#0b1220";
     ctx.fillRect(0, 0, size.w, size.h);
 
     if (!graph || !(graph.adjList instanceof Map) || graph.adjList.size === 0) return;
 
-    const airports = Array.from(graph.adjList.keys());
-    const n = airports.length;
+    // Calculate node degrees
+    const degrees = {};
+    let maxDegree = 0;
+    for (let [airport, edges] of graph.adjList.entries()) {
+      degrees[airport] = edges.length;
+      if (edges.length > maxDegree) maxDegree = edges.length;
+    }
+
+    // Interleave highest degree nodes at max separation
+    const sortedAirports = Array.from(graph.adjList.keys()).sort((a, b) => degrees[b] - degrees[a]);
+    const n = sortedAirports.length;
+
+    // Get placement indices interleaved for maximal separation:
+    const indices = interleaveIndices(n);
+    const airports = Array(n);
+    indices.forEach((idx, k) => {
+      airports[idx] = sortedAirports[k];
+    });
+
     const cx = size.w / 2, cy = size.h / 2;
     const circleRadius = Math.min(size.w, size.h) / 2.6;
-
-    // Compute node positions
     const positions = {};
     airports.forEach((a, i) => {
       const angle = (2 * Math.PI * i) / n;
@@ -69,19 +97,10 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       };
     });
 
-    // --- Compute degree info for scaling ---
-    const degrees = {};
-    let maxDegree = 0;
-    for (let [airport, edges] of graph.adjList.entries()) {
-      degrees[airport] = edges.length;
-      if (edges.length > maxDegree) maxDegree = edges.length;
-    }
+    const minR = 14;
+    const maxR = 34;
 
-    // Define radius scale range
-    const minR = 14; // smallest node radius
-    const maxR = 34; // largest node radius
-
-    // --- Draw edges ---
+    // Draw edges
     for (let [airport, edges] of graph.adjList.entries()) {
       const srcPos = positions[airport];
       for (const edge of edges) {
@@ -98,13 +117,11 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       }
     }
 
-    // --- Draw nodes ---
+    // Draw nodes
     for (let [airport, pos] of Object.entries(positions)) {
       const degree = degrees[airport] || 0;
-      const cappedDegree = Math.min(degree, 10); // threshold
+      const cappedDegree = Math.min(degree, 10);
       const radius = minR + ((cappedDegree / (maxDegree || 1)) * (maxR - minR));
-
-      // Node circle
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
       ctx.fillStyle = "#1f2937";
@@ -113,7 +130,6 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       ctx.strokeStyle = "#0ea5a0";
       ctx.stroke();
 
-      // Airport code label
       ctx.fillStyle = "#fff";
       ctx.font = "12px sans-serif";
       ctx.textAlign = "center";

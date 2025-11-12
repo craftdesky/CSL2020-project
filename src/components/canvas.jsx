@@ -6,6 +6,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
   const canvasRef = useRef(null);
   const [size, setSize] = useState({ w: 600, h: 400 });
 
+  // Resize observer to adapt to container
   useEffect(() => {
     const ro = new ResizeObserver(() => {
       if (!containerRef.current) return;
@@ -22,6 +23,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     return () => { ro.disconnect(); window.removeEventListener("resize", onResize); };
   }, []);
 
+  // Track highlighted edges
   const highlightSet = useRef(new Set());
   useEffect(() => {
     const s = new Set();
@@ -36,6 +38,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.floor(size.w * dpr);
     canvas.height = Math.floor(size.h * dpr);
@@ -44,6 +47,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+    // Clear & background
     ctx.clearRect(0, 0, size.w, size.h);
     ctx.fillStyle = "#0b1220";
     ctx.fillRect(0, 0, size.w, size.h);
@@ -53,18 +57,31 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     const airports = Array.from(graph.adjList.keys());
     const n = airports.length;
     const cx = size.w / 2, cy = size.h / 2;
-    const radius = Math.min(size.w, size.h) / 2.6;
+    const circleRadius = Math.min(size.w, size.h) / 2.6;
 
+    // Compute node positions
     const positions = {};
     airports.forEach((a, i) => {
       const angle = (2 * Math.PI * i) / n;
       positions[a] = {
-        x: cx + radius * Math.cos(angle),
-        y: cy + radius * Math.sin(angle)
+        x: cx + circleRadius * Math.cos(angle),
+        y: cy + circleRadius * Math.sin(angle)
       };
     });
 
-    // draw edges
+    // --- Compute degree info for scaling ---
+    const degrees = {};
+    let maxDegree = 0;
+    for (let [airport, edges] of graph.adjList.entries()) {
+      degrees[airport] = edges.length;
+      if (edges.length > maxDegree) maxDegree = edges.length;
+    }
+
+    // Define radius scale range
+    const minR = 14; // smallest node radius
+    const maxR = 34; // largest node radius
+
+    // --- Draw edges ---
     for (let [airport, edges] of graph.adjList.entries()) {
       const srcPos = positions[airport];
       for (const edge of edges) {
@@ -81,16 +98,22 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       }
     }
 
-    // draw nodes
+    // --- Draw nodes ---
     for (let [airport, pos] of Object.entries(positions)) {
+      const degree = degrees[airport] || 0;
+      const cappedDegree = Math.min(degree, 10); // threshold
+      const radius = minR + ((cappedDegree / (maxDegree || 1)) * (maxR - minR));
+
+      // Node circle
       ctx.beginPath();
-      ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+      ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
       ctx.fillStyle = "#1f2937";
       ctx.fill();
       ctx.lineWidth = 2;
       ctx.strokeStyle = "#0ea5a0";
       ctx.stroke();
 
+      // Airport code label
       ctx.fillStyle = "#fff";
       ctx.font = "12px sans-serif";
       ctx.textAlign = "center";

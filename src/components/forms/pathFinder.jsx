@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { dijkstra } from "../algorithms/dijkstra";
-import { astar } from "../algorithms/astar";
-import { fewestStops } from "../algorithms/fewestStops";
+import { dijkstra } from "../../algorithms/dijkstra";
+import { astar } from "../../algorithms/astar";
+import { fewestStops } from "../../algorithms/fewestStops";
 
 const euclideanHeuristic = (a, b) => {
   const [ax, ay] = a.split(",").map(Number);

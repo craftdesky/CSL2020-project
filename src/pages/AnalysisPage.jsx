@@ -1,8 +1,8 @@
 import React from "react";
 import { useLocation, Link } from "react-router-dom";
-import GraphAnalysisDashboard from "./GraphAnalysisDashboard";
-import { Graph } from "../../utils/Graph";
-import GraphList from "../GraphList";
+import GraphAnalysisDashboard from "../components/analysis/GraphAnalysisDashboard";
+import { Graph } from "../utils/Graph";
+import GraphList from "../components/analysis/GraphList";
 
 const AnalysisPage = () => {
   const location = useLocation();

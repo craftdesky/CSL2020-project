@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import flightData from "../../data/flight_data.json";
+import flightData from "../../data/flight_data.json"; // 
 
 // --- Helper: convert lat/lng to x/y within canvas bounds ---
 function project(lat, lng, bounds, size) {
@@ -32,7 +32,7 @@ const Canvas = ({ highlightedEdges = [] }) => {
   const graph = useRef(buildGraph(flightData)).current;
   const airports = flightData.airports;
 
-  // Compute lat/lng bounds
+  // --- Compute lat/lng bounds ---
   const bounds = {
     minLat: Math.min(...airports.map((a) => a.lat)),
     maxLat: Math.max(...airports.map((a) => a.lat)),
@@ -40,7 +40,7 @@ const Canvas = ({ highlightedEdges = [] }) => {
     maxLng: Math.max(...airports.map((a) => a.lng)),
   };
 
-  // Highlighted edges
+  // --- Highlighted edges (bidirectional) ---
   const highlightSet = useRef(new Set());
   useEffect(() => {
     const s = new Set();
@@ -51,7 +51,7 @@ const Canvas = ({ highlightedEdges = [] }) => {
     highlightSet.current = s;
   }, [highlightedEdges]);
 
-  // Resize observer
+  // --- Resize observer ---
   useEffect(() => {
     const ro = new ResizeObserver(() => {
       if (!containerRef.current) return;
@@ -63,18 +63,6 @@ const Canvas = ({ highlightedEdges = [] }) => {
     });
     if (containerRef.current) ro.observe(containerRef.current);
     return () => ro.disconnect();
-  }, []);
-
-  // --- 🗺️ Load India map image once ---
-  const mapImage = useRef(null);
-  useEffect(() => {
-    const img = new Image();
-    img.src = "/india_map.png"; // put this file in your public folder
-    img.onload = () => {
-      mapImage.current = img;
-      // Force re-render of canvas when image is ready
-      setSize((s) => ({ ...s }));
-    };
   }, []);
 
   // --- Main draw effect ---
@@ -99,20 +87,13 @@ const Canvas = ({ highlightedEdges = [] }) => {
     ctx.scale(zoom, zoom);
     ctx.translate(-size.w / 2, -size.h / 2);
 
-    // --- 🗺️ Draw India map in background ---
-    if (mapImage.current) {
-      ctx.globalAlpha = 0.25;
-      ctx.drawImage(mapImage.current, 0, 0, size.w, size.h);
-      ctx.globalAlpha = 1.0;
-    }
-
     // Precompute positions
     const positions = {};
     for (const a of airports) {
       positions[a.code] = project(a.lat, a.lng, bounds, size);
     }
 
-    // --- Draw edges ---
+    // --- Draw edges (flights) ---
     for (let [src, edges] of graph.adjList.entries()) {
       const srcPos = positions[src];
       for (const edge of edges) {
@@ -129,7 +110,7 @@ const Canvas = ({ highlightedEdges = [] }) => {
       }
     }
 
-    // --- Draw nodes ---
+    // --- Draw nodes (airports) ---
     for (const a of airports) {
       const pos = positions[a.code];
       if (!pos) continue;
@@ -203,21 +184,11 @@ const Canvas = ({ highlightedEdges = [] }) => {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full flex flex-col items-center justify-center"
-    >
+    <div ref={containerRef} className="w-full h-full flex flex-col items-center justify-center">
       <div className="mb-2 space-x-2">
         <button onClick={() => setZoom((z) => Math.min(z + 0.1, 3))}>🔍 Zoom In</button>
         <button onClick={() => setZoom((z) => Math.max(z - 0.1, 0.3))}>🔎 Zoom Out</button>
-        <button
-          onClick={() => {
-            setZoom(1);
-            setOffset({ x: 0, y: 0 });
-          }}
-        >
-          Reset
-        </button>
+        <button onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }}>Reset</button>
       </div>
       <canvas
         ref={canvasRef}

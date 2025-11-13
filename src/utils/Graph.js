@@ -82,4 +82,24 @@ export class Graph {
     routes.forEach(({ src, dest, distance, cost }) => g.addRoute(src, dest, distance, cost));
     return g;
   }
+  toJSON() {
+      return {
+        airports: Array.from(this.adjList.keys()),
+        routes: Array.from(this.adjList.entries()).flatMap(([src, list]) =>
+          list.map(edge => ({
+            src,
+            dest: edge.code,
+            distance: edge.distance,
+            cost: edge.cost
+          }))
+        )
+      };
+    }
+
+    static fromJSON(data) {
+      const g = new Graph();
+      data.airports.forEach(a => g.addAirport(a));
+      data.routes.forEach(r => g.addRoute(r.src, r.dest, r.distance, r.cost));
+      return g;
+    }
 }

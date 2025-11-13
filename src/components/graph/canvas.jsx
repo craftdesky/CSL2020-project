@@ -1,149 +1,143 @@
 import React, { useEffect, useRef, useState } from "react";
+import flightData from "../data/flight_data.json"; // ✅ static import
 
-function interleaveIndices(n) {
-  if (n === 0) return [];
-  const res = [];
-  let queue = [[0, n - 1]];
-  while (queue.length) {
-    let [l, r] = queue.shift();
-    if (l > r) continue;
-    const mid = Math.floor((l + r) / 2);
-    res.push(mid);
-    if (l !== r) {
-      queue.push([l, mid - 1]);
-      queue.push([mid + 1, r]);
-    }
-  }
-  return res;
+// --- Helper: convert lat/lng to x/y within canvas bounds ---
+function project(lat, lng, bounds, size) {
+  const x = ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * size.w;
+  const y = size.h - ((lat - bounds.minLat) / (bounds.maxLat - bounds.minLat)) * size.h;
+  return { x, y };
 }
 
-const Canvas = ({ graph, highlightedEdges = [] }) => {
+// --- Build graph from flight data ---
+function buildGraph(data) {
+  const adjList = new Map();
+  for (const f of data.flights) {
+    if (!adjList.has(f.origin)) adjList.set(f.origin, []);
+    if (!adjList.has(f.destination)) adjList.set(f.destination, []);
+    adjList.get(f.origin).push({ code: f.destination });
+    adjList.get(f.destination).push({ code: f.origin });
+  }
+  return { adjList };
+}
+
+const Canvas = ({ highlightedEdges = [] }) => {
   const containerRef = useRef(null);
   const canvasRef = useRef(null);
-  const [size, setSize] = useState({ w: 600, h: 400 });
-
-  // 🔍 Zoom and pan state
+  const [size, setSize] = useState({ w: 800, h: 600 });
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const isDragging = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
 
-  useEffect(() => {
-    const ro = new ResizeObserver(() => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      setSize({ w: Math.max(300, rect.width - 20), h: Math.max(300, rect.height - 20) });
-    });
-    if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
-  }, []);
+  const graph = useRef(buildGraph(flightData)).current;
+  const airports = flightData.airports;
 
+  // --- Compute lat/lng bounds ---
+  const bounds = {
+    minLat: Math.min(...airports.map((a) => a.lat)),
+    maxLat: Math.max(...airports.map((a) => a.lat)),
+    minLng: Math.min(...airports.map((a) => a.lng)),
+    maxLng: Math.max(...airports.map((a) => a.lng)),
+  };
+
+  // --- Highlighted edges (bidirectional) ---
   const highlightSet = useRef(new Set());
   useEffect(() => {
     const s = new Set();
-    for (const pair of highlightedEdges || []) {
-      const [a, b] = pair;
+    for (const [a, b] of highlightedEdges) {
       s.add(`${a}->${b}`);
       s.add(`${b}->${a}`);
     }
     highlightSet.current = s;
   }, [highlightedEdges]);
 
-  // 🎨 Draw graph
+  // --- Resize observer ---
+  useEffect(() => {
+    const ro = new ResizeObserver(() => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      setSize({
+        w: Math.max(400, rect.width - 20),
+        h: Math.max(400, rect.height - 20),
+      });
+    });
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  // --- Main draw effect ---
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !graph) return;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.floor(size.w * dpr);
     canvas.height = Math.floor(size.h * dpr);
     canvas.style.width = `${size.w}px`;
     canvas.style.height = `${size.h}px`;
-    const ctx = canvas.getContext("2d");
-
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, size.w, size.h);
+
+    // Background
     ctx.fillStyle = "#0b1220";
     ctx.fillRect(0, 0, size.w, size.h);
 
-    // 🔍 Apply zoom and pan transform
+    // Apply zoom and pan
     ctx.save();
     ctx.translate(size.w / 2 + offset.x, size.h / 2 + offset.y);
     ctx.scale(zoom, zoom);
     ctx.translate(-size.w / 2, -size.h / 2);
 
-    if (!(graph.adjList instanceof Map) || graph.adjList.size === 0) return;
-
-    const degrees = {};
-    let maxDegree = 0;
-    for (let [airport, edges] of graph.adjList.entries()) {
-      degrees[airport] = edges.length;
-      if (edges.length > maxDegree) maxDegree = edges.length;
+    // Precompute positions
+    const positions = {};
+    for (const a of airports) {
+      positions[a.code] = project(a.lat, a.lng, bounds, size);
     }
 
-    const sortedAirports = Array.from(graph.adjList.keys()).sort(
-      (a, b) => degrees[b] - degrees[a]
-    );
-    const n = sortedAirports.length;
-    const indices = interleaveIndices(n);
-    const airports = Array(n);
-    indices.forEach((idx, k) => (airports[idx] = sortedAirports[k]));
-
-    const cx = size.w / 2,
-      cy = size.h / 2;
-    const circleRadius = Math.min(size.w, size.h) / 2.6;
-    const positions = {};
-    airports.forEach((a, i) => {
-      const angle = (2 * Math.PI * i) / n;
-      positions[a] = {
-        x: cx + circleRadius * Math.cos(angle),
-        y: cy + circleRadius * Math.sin(angle),
-      };
-    });
-
-    const minR = 14;
-    const maxR = 34;
-
-    // Edges
-    for (let [airport, edges] of graph.adjList.entries()) {
-      const srcPos = positions[airport];
+    // --- Draw edges (flights) ---
+    for (let [src, edges] of graph.adjList.entries()) {
+      const srcPos = positions[src];
       for (const edge of edges) {
         const destPos = positions[edge.code];
         if (!srcPos || !destPos) continue;
-        const key = `${airport}->${edge.code}`;
+        const key = `${src}->${edge.code}`;
         const isHighlighted = highlightSet.current.has(key);
         ctx.beginPath();
         ctx.moveTo(srcPos.x, srcPos.y);
         ctx.lineTo(destPos.x, destPos.y);
-        ctx.strokeStyle = isHighlighted ? "#16a34a" : "#475569";
-        ctx.lineWidth = isHighlighted ? 3.5 : 1.2;
+        ctx.strokeStyle = isHighlighted ? "#16a34a" : "rgba(255,255,255,0.25)";
+        ctx.lineWidth = isHighlighted ? 3 : 1;
         ctx.stroke();
       }
     }
 
-    // Nodes
-    for (let [airport, pos] of Object.entries(positions)) {
-      const degree = degrees[airport] || 0;
-      const cappedDegree = Math.min(degree, 10);
-      const radius = minR + (cappedDegree / (maxDegree || 1)) * (maxR - minR);
+    // --- Draw nodes (airports) ---
+    for (const a of airports) {
+      const pos = positions[a.code];
+      if (!pos) continue;
+
+      const deg = graph.adjList.get(a.code)?.length || 0;
+      const radius =
+        a.type === "large_airport"
+          ? 6 + deg * 0.2
+          : a.type === "medium_airport"
+          ? 5 + deg * 0.15
+          : 4 + deg * 0.1;
+
       ctx.beginPath();
       ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
-      ctx.fillStyle = "#1f2937";
+      ctx.fillStyle =
+        a.type === "large_airport"
+          ? "#fbbf24"
+          : a.type === "medium_airport"
+          ? "#0ea5a0"
+          : "#64748b";
       ctx.fill();
-      ctx.lineWidth = 2;
-      ctx.strokeStyle = "#0ea5a0";
-      ctx.stroke();
-
-      ctx.fillStyle = "#fff";
-      ctx.font = "12px sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(airport, pos.x, pos.y);
     }
 
     ctx.restore();
-  }, [graph, size, highlightedEdges, zoom, offset]);
+  }, [size, zoom, offset, highlightedEdges, graph, airports, bounds]);
 
-  // 🖱️ Mouse wheel zoom
+  // --- Mouse zoom ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -156,7 +150,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     return () => canvas.removeEventListener("wheel", handleWheel);
   }, []);
 
-  // 🖱️ Pan (drag)
+  // --- Mouse drag pan ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -164,6 +158,7 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
     const handleDown = (e) => {
       isDragging.current = true;
       lastPos.current = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = "grabbing";
     };
     const handleMove = (e) => {
       if (!isDragging.current) return;
@@ -172,7 +167,10 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
       lastPos.current = { x: e.clientX, y: e.clientY };
       setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
     };
-    const handleUp = () => (isDragging.current = false);
+    const handleUp = () => {
+      isDragging.current = false;
+      canvas.style.cursor = "grab";
+    };
 
     canvas.addEventListener("mousedown", handleDown);
     window.addEventListener("mousemove", handleMove);
@@ -186,16 +184,16 @@ const Canvas = ({ graph, highlightedEdges = [] }) => {
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="w-full h-full flex flex-col items-center justify-center"
-    >
+    <div ref={containerRef} className="w-full h-full flex flex-col items-center justify-center">
       <div className="mb-2 space-x-2">
         <button onClick={() => setZoom((z) => Math.min(z + 0.1, 3))}>🔍 Zoom In</button>
         <button onClick={() => setZoom((z) => Math.max(z - 0.1, 0.3))}>🔎 Zoom Out</button>
         <button onClick={() => { setZoom(1); setOffset({ x: 0, y: 0 }); }}>Reset</button>
       </div>
-      <canvas ref={canvasRef} className="rounded border border-slate-600 cursor-grab" />
+      <canvas
+        ref={canvasRef}
+        className="rounded border border-slate-600 cursor-grab"
+      />
     </div>
   );
 };

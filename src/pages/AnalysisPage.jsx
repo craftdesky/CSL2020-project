@@ -1,44 +1,34 @@
 import React from "react";
-import { useLocation, Link } from "react-router-dom";
-import GraphAnalysisDashboard from "../components/analysis/GraphAnalysisDashboard";
+import { Link, useLocation } from "react-router-dom";
 import { Graph } from "../utils/Graph";
-import GraphList from "../components/analysis/GraphList";
+import GraphAnalysisDashboard from "../components/analysis/GraphAnalysisDashboard";
 
-const AnalysisPage = () => {
+export default function Analysis() {
   const location = useLocation();
-  const raw = location.state?.graph;
+  const graphData = location.state?.graph;
 
-  if (!raw) {
+  if (!graphData) {
     return (
-      <div className="text-white p-10 text-center">
-        <h1 className="text-2xl mb-4">No graph data received</h1>
-        <Link to="/" className="text-blue-400 underline">
+      <div className="text-center text-gray-300 p-10">
+        <h2 className="text-2xl mb-4">No graph data received</h2>
+        <Link to="/" className="underline text-blue-400">
           Go back to Home
         </Link>
       </div>
     );
   }
 
-  // REBUILD GRAPH
-  const graph = Graph.fromJSON(raw);
+  const graph = Graph.fromJSON(graphData);
 
   return (
-    <div className="bg-gray-950 min-h-screen text-white p-8 overflow-y-auto">
-      <Link to="/" className="text-blue-400 underline text-lg">
-        ⬅ Back to Home
+    <div className="p-6 bg-gray-950 min-h-screen text-white space-y-8">
+
+      <Link to="/" className="text-blue-400 underline">
+        ← Back to Home
       </Link>
 
-      <h1 className="text-3xl font-bold mt-4 mb-6">
-        Graph Analysis
-      </h1>
-
       <GraphAnalysisDashboard graph={graph} />
-      <div className="bg-gray-800 p-4 rounded-lg shadow mt-8">
-        <h2 className="text-xl font-semibold mb-3">Adjacency List</h2>
-        <GraphList graph={graph} />
-        </div>
+
     </div>
   );
-};
-
-export default AnalysisPage;
+}

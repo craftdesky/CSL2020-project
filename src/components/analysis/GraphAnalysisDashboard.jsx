@@ -1,134 +1,116 @@
+// src/components/analysis/GraphAnalysisDashboard.jsx
 import React from "react";
+import { getAllAnalysisMetrics } from "./metrics";
 
-function getDegreeCentrality(graph) {
-  const degrees = {};
-  for (let [airport, edges] of graph.adjList.entries()) {
-    degrees[airport] = edges.length;
+export default function GraphAnalysisDashboard({ graph }) {
+  if (!graph) {
+    return (
+      <div className="text-center text-gray-300 p-6">
+        No graph data received.
+      </div>
+    );
   }
-  const maxDegree = Math.max(...Object.values(degrees));
-  const mostConnected = Object.entries(degrees)
-    .filter(([, d]) => d === maxDegree)
-    .map(([code]) => code);
-  return { degrees, mostConnected, maxDegree };
-}
 
-function getConnectedComponents(graph) {
-  const visited = new Set();
-  const components = [];
-  const nodes = Array.from(graph.adjList.keys());
-  for (const start of nodes) {
-    if (visited.has(start)) continue;
-    const comp = [];
-    const queue = [start];
-    visited.add(start);
-    while (queue.length) {
-      const u = queue.shift();
-      comp.push(u);
-      for (const { code: v } of graph.getNeighbors(u)) {
-        if (!visited.has(v)) {
-          visited.add(v);
-          queue.push(v);
-        }
-      }
-    }
-    components.push(comp);
-  }
-  return components;
-}
-
-function getBetweennessCentrality(graph) {
-  const airports = Array.from(graph.adjList.keys());
-  const betweenness = {};
-  airports.forEach(a => betweenness[a] = 0);
-  function bfsPaths(src, dst) {
-    if (src === dst) return [];
-    let queue = [[src, [src]]];
-    let res = [];
-    while (queue.length) {
-      let [node, path] = queue.shift();
-      if (node === dst) {
-        res.push(path);
-        continue;
-      }
-      for (const { code: nbr } of graph.getNeighbors(node)) {
-        if (!path.includes(nbr)) {
-          queue.push([nbr, [...path, nbr]]);
-        }
-      }
-    }
-    return res;
-  }
-  for (let i = 0; i < airports.length; ++i) {
-    for (let j = i + 1; j < airports.length; ++j) {
-      const allPaths = bfsPaths(airports[i], airports[j]);
-      for (const p of allPaths) {
-        for (let k = 1; k < p.length - 1; ++k) {
-          betweenness[p[k]]++;
-        }
-      }
-    }
-  }
-  const maxBetw = Math.max(...Object.values(betweenness));
-  const hubs = Object.entries(betweenness)
-    .filter(([, x]) => x === maxBetw)
-    .map(([code]) => code);
-  return { betweenness, hubs };
-}
-
-const GraphAnalysisDashboard = ({ graph }) => {
-  if (!graph) return null;
-  const { mostConnected, maxDegree, degrees } = getDegreeCentrality(graph);
-  const components = getConnectedComponents(graph);
-  const { betweenness, hubs } = getBetweennessCentrality(graph);
+  const metrics = getAllAnalysisMetrics(graph);
 
   return (
-    <div style={{
-      background: "#192234",
-      borderRadius: 10,
-      padding: 16,
-      marginTop: 8,
-      color: "#fff",
-      fontFamily: "sans-serif",
-      fontSize: "15px"
-    }}>
-      <h3 style={{ fontWeight: 800, fontSize: 19, marginBottom: 8 }}>Graph Analysis Dashboard</h3>
-      <div style={{ marginBottom: 16 }}>
-        <strong>Most Connected Airport(s):</strong>
-        <span style={{ marginLeft: 8 }}>
-          {mostConnected.join(', ')} (Degree {maxDegree})
-        </span>
-      </div>
-      <div style={{ marginBottom: 16 }}>
-        <strong>Hub Airport(s):</strong>
-        <span style={{ marginLeft: 8 }}>
-          {hubs.join(', ')}
-        </span>
-      </div>
-      <div style={{ marginBottom: 16, maxHeight: 90, overflowY: "auto" }}>
-        <strong>Subnetworks ({components.length}):</strong>
-        <ul style={{ margin: 0, padding: 0 }}>
-          {components.map((comp, i) =>
-            <li key={i} style={{ marginBottom: 2, marginLeft: 8 }}>
-              <span>{comp.join(', ')}</span>
-            </li>
-          )}
-        </ul>
-      </div>
-      <details>
-        <summary style={{ cursor: "pointer", color: "#bbb", marginTop: 12 }}>
-          All Degree/Centrality Stats
-        </summary>
-        <div style={{ marginTop: 4, fontFamily: "monospace", fontSize: 13 }}>
-          <u>Degree Centrality:</u><br/>
-          {Object.entries(degrees)
-            .map(([k, v]) => `${k}: ${v}`).join(" | ")}
-          <br/><u>Betweenness Centrality:</u><br/>
-          {Object.entries(betweenness)
-            .map(([k, v]) => `${k}: ${v}`).join(" | ")}
+    <div className="space-y-10 p-4">
+
+      {/* MAIN TITLE */}
+      <h1 className="text-3xl font-bold mb-4">Graph Analysis</h1>
+
+      {/* BASIC METRICS */}
+      <Section title="Basic Graph Metrics">
+        <MetricLine label="Total Airports" value={metrics.totalAirports} />
+        <MetricLine label="Total Routes" value={metrics.totalRoutes} />
+        <MetricLine label="Average Degree" value={metrics.avgDegree.toFixed(2)} />
+        <MetricLine
+          label="Max Degree Airports"
+          value={`${metrics.maxDegree} — ${metrics.mostConnected.join(", ")}`}
+        />
+        <MetricLine
+          label="Min Degree Airports"
+          value={`${metrics.minDegree} — ${metrics.leastConnected.join(", ")}`}
+        />
+      </Section>
+
+      {/* CONNECTIVITY */}
+      <Section title="Connectivity">
+        <MetricLine
+          label="Is Graph Connected?"
+          value={metrics.isConnected ? "YES" : "NO"}
+        />
+        <MetricLine
+          label="Connected Components"
+          value={metrics.components.length}
+        />
+
+        {/* List components */}
+        <div className="mt-3">
+          {metrics.components.map((comp, idx) => (
+            <div key={idx} className="mb-1">
+              <span className="font-semibold">Component {idx + 1}: </span>
+              {comp.join(", ")}
+            </div>
+          ))}
         </div>
-      </details>
+      </Section>
+
+      {/* STRUCTURAL METRICS (without radius/diameter) */}
+      <Section title="Structural Metrics">
+        <MetricLine
+          label="Center Airports (minimum eccentricity)"
+          value={metrics.centers.join(", ")}
+        />
+        <MetricLine
+          label="Peripheral Airports (maximum eccentricity)"
+          value={metrics.peripherals.join(", ")}
+        />
+      </Section>
+
+      {/* ECCENTRICITIES */}
+      <Section title="Eccentricity (in hops)">
+        <div className="space-y-1">
+          {Object.entries(metrics.eccentricities).map(([node, ecc]) => (
+            <div key={node} className="flex justify-between">
+              <span className="text-gray-300">{node}</span>
+              <span className="font-semibold">{ecc}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
+
+      {/* RAW DEGREE LIST */}
+      <Section title="Degree of Each Airport">
+        <div className="space-y-1">
+          {Object.entries(metrics.degrees).map(([node, deg]) => (
+            <div key={node} className="flex justify-between">
+              <span className="text-gray-300">{node}</span>
+              <span className="font-semibold">{deg}</span>
+            </div>
+          ))}
+        </div>
+      </Section>
     </div>
   );
-};
+}
 
-export default GraphAnalysisDashboard;
+/* ---------------------- UI COMPONENTS ---------------------- */
+
+function Section({ title, children }) {
+  return (
+    <div className="bg-gray-800 p-6 rounded-xl shadow">
+      <h2 className="text-xl font-semibold mb-4">{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+function MetricLine({ label, value }) {
+  return (
+    <div className="flex justify-between py-1 border-b border-gray-700">
+      <span className="text-gray-400">{label}</span>
+      <span className="font-semibold">{value}</span>
+    </div>
+  );
+}

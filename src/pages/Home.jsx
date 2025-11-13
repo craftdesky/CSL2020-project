@@ -1,17 +1,25 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { Graph } from "./utils/Graph";
-import { sampleAirports, sampleRoutes } from "./data/sampleData";
+import { Graph } from "../utils/Graph";
+import { sampleAirports, sampleRoutes } from "../data/sampleData";
 
-import PathFinder from "./components/PathFinder";
-import Canvas from "./components/Canvas";
-import GraphList from "./components/GraphList";
-import MessageBar from "./components/MessageBar";
-import AddAirport from "./components/AddAirport";
-import AddRoute from "./components/AddRoute";
-import DeleteAirport from "./components/DeleteAirport";
-import DeleteRoute from "./components/DeleteRoute";
+// layout
+import Header from "../components/layout/Header";
+import Sidebar from "../components/layout/Sidebar";
+
+// graph
+import Canvas from "../components/graph/Canvas";
+
+// forms (Sidebar will call these — but Home receives callbacks)
+import PathFinder from "../components/forms/pathFinder";
+import AddAirport from "../components/forms/AddAirport";
+import AddRoute from "../components/forms/AddRoute";
+import DeleteAirport from "../components/forms/DeleteAirport";
+import DeleteRoute from "../components/forms/DeleteRoute";
+
+// analysis (GraphList moved to Analysis page)
+import GraphList from "../components/analysis/GraphList";
 
 const initialGraph = Graph.fromData(sampleAirports, sampleRoutes);
 
@@ -33,8 +41,8 @@ const Home = () => {
     }
 
     const routeStr = path.join(" → ");
-
     let text;
+
     if (metric === "distance") {
       text = `✅ Shortest path (by distance): ${routeStr} | Total: ${total} km`;
     } else {
@@ -79,43 +87,24 @@ const Home = () => {
 
   return (
     <div className="w-screen h-screen bg-gray-950 text-white flex flex-col">
-      <header className="px-8 py-4 border-b border-gray-700 flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-wide">Airport Route Planner</h1>
-        <div className="w-1/2">
-          <MessageBar message={message.text} type={message.type} />
-        </div>
-      </header>
+
+      {/* Header */}
+      <Header message={message} />
 
       <div className="flex flex-1 overflow-hidden">
+
         {/* Sidebar */}
-        <aside className="w-1/3 bg-gray-900 border-r border-gray-800 p-6 flex flex-col gap-6 overflow-y-auto">
-          
-          {/* NEW BUTTON TO OPEN ANALYSIS PAGE */}
-          <Link to="/analysis" state={{ graph: graph.toJSON() }}>
-            <button className="w-full py-2 bg-gray-700 rounded-lg text-white font-semibold mb-4 hover:bg-gray-600 transition">
-                📊 Open Graph Analysis
-            </button>
-            </Link>
+        <Sidebar
+          graph={graph}
+          airports={airports}
+          onAddAirport={handleAddAirport}
+          onAddRoute={handleAddRoute}
+          onDeleteAirport={handleDeleteAirport}
+          onDeleteRoute={handleDeleteRoute}
+          onPathResult={handlePathResult}
+        />
 
-          <div className="bg-gray-800 p-4 rounded-lg shadow mb-2">
-            <PathFinder graph={graph} onResult={handlePathResult} />
-          </div>
-          <div className="bg-gray-800 p-4 rounded-lg shadow mb-2">
-            <AddAirport onAdd={handleAddAirport} />
-          </div>
-          <div className="bg-gray-800 p-4 rounded-lg shadow mb-2">
-            <AddRoute airports={airports} onAdd={handleAddRoute} />
-          </div>
-          <div className="bg-gray-800 p-4 rounded-lg shadow mb-2">
-            <DeleteAirport airports={airports} onDelete={handleDeleteAirport} />
-          </div>
-          <div className="bg-gray-800 p-4 rounded-lg shadow mb-2">
-            <DeleteRoute airports={airports} onDelete={handleDeleteRoute} />
-          </div>
-
-          {/* REMOVED ANALYSIS DASHBOARD FROM SIDEBAR */}
-        </aside>
-
+        {/* Main Canvas Area */}
         <main className="flex-1 flex items-center justify-center bg-gray-950 p-6">
           <div className="w-full h-full max-w-6xl max-h-[80vh]">
             <Canvas graph={graph} highlightedEdges={highlightedEdges} />

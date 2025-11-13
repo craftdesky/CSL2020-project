@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import { Graph } from "../utils/Graph";
 import GraphAnalysisDashboard from "../components/analysis/GraphAnalysisDashboard";
@@ -21,14 +22,20 @@ export default function Analysis() {
   const graph = Graph.fromJSON(graphData);
 
   return (
-    <div className="p-6 bg-gray-950 min-h-screen text-white space-y-8">
+    <div className="p-8 bg-gray-950 min-h-screen text-white space-y-8">
 
-      <Link to="/" className="text-blue-400 underline">
+      <Link to="/" className="text-blue-400 underline text-lg">
         ← Back to Home
       </Link>
 
-      <GraphAnalysisDashboard graph={graph} />
-
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="max-w-4xl mx-auto"
+      >
+        <GraphAnalysisDashboard graph={graph} />
+      </motion.div>
     </div>
   );
 }

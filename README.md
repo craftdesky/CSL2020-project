@@ -131,10 +131,10 @@ This structure provides an organized layout for the project, making it easy to n
 - Visualize complex data structures interactively.
 
 ## Contributors
-- **Nihar Kuchankar**: Craftdesky.
-- **Yashvabhav Bhardwaj** : ConicSections1
-- **Jaenil Parekh** : Jaenil
-- **Krish Patel** :
+- **Nihar Kuchankar** - B24CS1102 - github: Craftdesky.
+- **Yashvabhav Bhardwaj** - B24EE1100 - github: ConicSections1
+- **Jaenil Parekh** - B24CS1117 - github: Jaenil
+- **Krish Patel** - B24CS1054 - github: krishpatel2006
 
 ## License
 This project is licensed under the MIT License.

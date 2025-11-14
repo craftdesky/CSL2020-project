@@ -13,10 +13,10 @@
 - [License](#license)
 
 ## Overview
-The Airport Route Planner is a web-based application designed to visualize and analyze graph-based data structures, specifically focusing on airport routes. This project is ideal for B.Tech 2nd-year students to understand and implement graph algorithms in a practical setting.
+The Airport Route Planner is a web-based application designed to visualize and analyze graph-based data structures, specifically focusing on airport routes. This project is our DSA Major Project focusing on implementation of graph algorithms in a practical setting.
 
 ## Features
-- **Graph Algorithms**: Implementation of Dijkstra, Bellman-Ford, and A* algorithms for shortest path calculations.
+- **Graph Algorithms**: Implementation of Dijkstra and Bellman-Ford algorithms for shortest path calculations.
 - **Interactive Visualization**: Graphical representation of airports and routes.
 - **Dynamic Forms**: Add or remove airports and routes dynamically.
 - **Analysis Dashboard**: View metrics like connectivity, degree, and components of the graph.
@@ -78,7 +78,6 @@ This structure provides an organized layout for the project, making it easy to n
 ## Project Structure
 
 ### Algorithms
-- **astar.js**: Implements the A* algorithm using a MinHeap for priority queue operations.
 - **bellmanFord.js**: Implements the Bellman-Ford algorithm for shortest path calculations, supporting both distance and cost metrics.
 - **dijkstra.js**: Implements Dijkstra's algorithm using a MinHeap for efficient shortest path calculations.
 
@@ -132,7 +131,10 @@ This structure provides an organized layout for the project, making it easy to n
 - Visualize complex data structures interactively.
 
 ## Contributors
-- **CraftDesky**: Project owner and maintainer.
+- **Nihar Kuchankar**: Craftdesky.
+- **Gayvabhav Bhardwaj** : ConicSections1
+- **Jaenil Parekh** : Jaenil
+- **Krish Patel** :
 
 ## License
 This project is licensed under the MIT License.

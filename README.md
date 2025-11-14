@@ -132,7 +132,7 @@ This structure provides an organized layout for the project, making it easy to n
 
 ## Contributors
 - **Nihar Kuchankar**: Craftdesky.
-- **Gayvabhav Bhardwaj** : ConicSections1
+- **Yashvabhav Bhardwaj** : ConicSections1
 - **Jaenil Parekh** : Jaenil
 - **Krish Patel** :
 

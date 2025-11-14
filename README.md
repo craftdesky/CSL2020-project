@@ -84,6 +84,7 @@ This structure provides an organized layout for the project, making it easy to n
 ### Components
 - **GraphAnalysisDashboard.jsx**: Displays metrics and analysis of the graph, such as total airports, routes, and connectivity.
 - **AddAirport.jsx**: Form to add new airports to the graph.
+- **AddRoute.jsx**: Form to add new flights ie nodes to the graph.
 - **pathFinder.jsx**: Interface to find paths between airports using different algorithms and metrics.
 
 ### Utilities

@@ -135,6 +135,7 @@ This structure provides an organized layout for the project, making it easy to n
 - **Yashvabhav Bhardwaj** - B24EE1100 - github: ConicSections1
 - **Jaenil Parekh** - B24CS1117 - github: Jaenil
 - **Krish Patel** - B24CS1054 - github: krishpatel2006
+Please check Contributions.md for contributions by each team member.
 
 ## License
 This project is licensed under the MIT License.
